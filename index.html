@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Facts Quiz</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main>
+        <form id="quiz">
+            <span id="factor1">1</span>
+            <span id="operator">&times;</span>
+            <span id="factor2">1</span>
+            <span id="equals">=</span>
+            <input type="number" id="answer">
+            <button id="answer" popovertarget="correct_or_incorrect">Submit</button>
+        </form>
+    </main>
+    <aside popover id="correct_or_incorrect">👍</aside>
+    <script type="module" src="index.js"></script>
+</body>
+</html>
