@@ -49,13 +49,12 @@ document.getElementById("quiz").addEventListener("submit", (event) => {
     }
     // Toggle the show class to display the popover
     popover.classList.toggle("show");
+    setTimeout(() => {
+        popover.classList.toggle("show");
+    }, 1000);
     history.push(result);
     console.log({history});
     answerInput.value = "";
-    // Remove the popover
-    setTimeout(() => {
-        popover.hidePopover();
-    }, 1000);
     displayProblem();
     answerInput.focus();
 });
