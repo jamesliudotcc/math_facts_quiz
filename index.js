@@ -52,10 +52,9 @@ document.getElementById("quiz").addEventListener("submit", (event) => {
 
 // Add this after the existing event listeners
 document.getElementById("answer").addEventListener("blur", (event) => {
-    // Wait 100ms before refocusing
     setTimeout(() => {
         event.target.focus();
-    }, 100);
+    }, 100); // 100 is milliseconds
 });
 
 // Store original checkbox states for cancellation
