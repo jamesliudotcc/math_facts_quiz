@@ -1,34 +1,12 @@
 import { TIMES } from "./constants.js";
+import { generateProblem, resultIsCorrect } from "./math-utils.js";
+
 const history = [];
 let currentProblem = {};
 const selectedNumbers = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
-const generateProblem = () => {
-    // Convert Set to Array for random selection
-    const numbersArray = [...selectedNumbers];
-
-    // Only generate problems if we have numbers to work with
-    if (numbersArray.length === 0) {
-        return {
-            factor1: 0,
-            factor2: 0,
-            operator: TIMES
-        };
-    }
-
-    // Randomly select numbers from the selectedNumbers
-    const randomIndex1 = Math.floor(Math.random() * numbersArray.length);
-    const randomIndex2 = Math.floor(Math.random() * numbersArray.length);
-
-    return {
-        factor1: numbersArray[randomIndex1],
-        factor2: numbersArray[randomIndex2],
-        operator: TIMES,
-    };
-}
-
 const displayProblem = () => {
-    currentProblem = generateProblem();
+    currentProblem = generateProblem(selectedNumbers);
     document.getElementById("factor1").textContent = currentProblem.factor1;
     document.getElementById("operator").textContent = currentProblem.operator;
     document.getElementById("factor2").textContent = currentProblem.factor2;
@@ -40,12 +18,6 @@ window.addEventListener("load", () => {
     // set focus on the input
     document.getElementById("answer").focus();
 })
-
-const resultIsCorrect = (result) => {
-    if (result.operator === TIMES) {
-        return result.answer === result.factor1 * result.factor2;
-    }
-}
 
 const popover = document.getElementById("correct_or_incorrect");
 
