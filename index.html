@@ -7,6 +7,40 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <nav>
+        <button id="settings-button" class="settings-button">🍔</button>
+    </nav>
+
+    <dialog id="settings-dialog">
+        <h2>Settings</h2>
+        <form id="settings-form" method="dialog">
+            <div class="number-grid">
+                <input type="checkbox" id="_1" checked>
+                <label for="_1">1</label>
+                <input type="checkbox" id="_2" checked>
+                <label for="_2">2</label>
+                <input type="checkbox" id="_3" checked>
+                <label for="_3">3</label>
+                <input type="checkbox" id="_4" checked>
+                <label for="_4">4</label>
+                <input type="checkbox" id="_5" checked>
+                <label for="_5">5</label>
+                <input type="checkbox" id="_6" checked>
+                <label for="_6">6</label>
+                <input type="checkbox" id="_7" checked>
+                <label for="_7">7</label>
+                <input type="checkbox" id="_8" checked>
+                <label for="_8">8</label>
+                <input type="checkbox" id="_9" checked>
+                <label for="_9">9</label>
+                <input type="checkbox" id="_10" checked>
+                <label for="_10">10</label>
+            </div>
+            <div class="dialog-buttons">
+                <button type="submit" id="settings-ok">OK</button>
+            </div>
+        </form>
+    </dialog>
     <main>
         <form id="quiz">
             <span id="factor1">1</span>
@@ -14,7 +48,7 @@
             <span id="factor2">1</span>
             <span id="equals">=</span>
             <input type="number" id="answer">
-            <button id="answer" popovertarget="correct_or_incorrect">Submit</button>
+            <button id="submitAnswer" popovertarget="correct_or_incorrect">Submit</button>
         </form>
     </main>
     <aside popover id="correct_or_incorrect">👍</aside>

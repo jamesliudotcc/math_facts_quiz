@@ -1,12 +1,31 @@
 import { TIMES } from "./constants.js";
 const history = [];
 let currentProblem = {};
+const selectedNumbers = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
-const generateProblem = () => ({
-    factor1: Math.floor(Math.random() * 10) + 1,
-    factor2: Math.floor(Math.random() * 10) + 1,
-    operator: TIMES,
-})
+const generateProblem = () => {
+    // Convert Set to Array for random selection
+    const numbersArray = [...selectedNumbers];
+
+    // Only generate problems if we have numbers to work with
+    if (numbersArray.length === 0) {
+        return {
+            factor1: 0,
+            factor2: 0,
+            operator: TIMES
+        };
+    }
+
+    // Randomly select numbers from the selectedNumbers
+    const randomIndex1 = Math.floor(Math.random() * numbersArray.length);
+    const randomIndex2 = Math.floor(Math.random() * numbersArray.length);
+
+    return {
+        factor1: numbersArray[randomIndex1],
+        factor2: numbersArray[randomIndex2],
+        operator: TIMES,
+    };
+}
 
 const displayProblem = () => {
     currentProblem = generateProblem();
@@ -66,3 +85,56 @@ document.getElementById("answer").addEventListener("blur", (event) => {
         event.target.focus();
     }, 100);
 });
+
+// Store original checkbox states for cancellation
+let originalCheckboxStates = {};
+
+// Get dialog and button elements
+const settingsDialog = document.getElementById("settings-dialog");
+const settingsButton = document.getElementById("settings-button");
+const settingsForm = document.getElementById("settings-form");
+
+// Open dialog and save original checkbox states
+settingsButton.addEventListener("click", () => {
+    // Save the current state of checkboxes before opening dialog
+    for (let i = 1; i <= 10; i += 1) {
+        originalCheckboxStates[i] = document.getElementById(`_${i}`).checked;
+    }
+    settingsDialog.showModal();
+});
+
+// Handle dialog submission (OK button)
+settingsForm.addEventListener("submit", () => {
+    // Generate a new problem when settings are confirmed
+    displayProblem();
+});
+
+// Handle dialog cancellation (clicking outside)
+settingsDialog.addEventListener("click", (event) => {
+    if (event.target === settingsDialog) {
+        // Restore original checkbox states
+        for (let i = 1; i <= 10; i += 1) {
+            document.getElementById(`_${i}`).checked = originalCheckboxStates[i];
+        }
+        settingsDialog.close();
+    }
+});
+
+// Focus input when the dialog is closed (for both OK and cancel cases)
+settingsDialog.addEventListener("close", () => {
+    // Focus back on the answer input
+    document.getElementById("answer").focus();
+});
+
+// Add event listeners to checkboxes for selecting numbers
+for (let i = 1; i <= 10; i += 1) {
+    const checkboxId = `_${i}`;
+    document.getElementById(checkboxId).addEventListener("change", (event) => {
+        if (event.target.checked) {
+            selectedNumbers.add(i);
+        } else {
+            selectedNumbers.delete(i);
+        }
+        console.log("Selected numbers:", [...selectedNumbers]);
+    });
+}
