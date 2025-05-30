@@ -96,15 +96,19 @@ const settingsForm = document.getElementById("settings-form");
 
 // Open dialog and save original checkbox states
 settingsButton.addEventListener("click", () => {
-    // Save the current state of checkboxes before opening dialog
+    // Update checkboxes to match the current selectedNumbers set
     for (let i = 1; i <= 10; i += 1) {
-        originalCheckboxStates[i] = document.getElementById(`_${i}`).checked;
+        const checkbox = document.getElementById(`_${i}`);
+        checkbox.checked = selectedNumbers.has(i);
+        // Save the current state for potential cancellation
+        originalCheckboxStates[i] = checkbox.checked;
     }
     settingsDialog.showModal();
 });
 
 // Handle dialog submission (OK button)
 settingsForm.addEventListener("submit", () => {
+
     // Generate a new problem when settings are confirmed
     displayProblem();
 });
@@ -137,4 +141,4 @@ for (let i = 1; i <= 10; i += 1) {
         }
         console.log("Selected numbers:", [...selectedNumbers]);
     });
-}
+};
