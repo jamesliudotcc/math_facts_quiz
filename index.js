@@ -7,10 +7,13 @@ import {clearFeedback, createNewProblem, getSelectedNumbers, submitAnswer, updat
  */
 const displayProblem = () => {
     const problem = createNewProblem();
+
+    // Set up update by grabbing the elements from the DOM
     const factor1Element = document.getElementById("factor1");
     const operatorElement = document.getElementById("operator");
     const factor2Element = document.getElementById("factor2");
 
+    // Update the elements with the new problem data
     if (factor1Element) factor1Element.textContent = String(problem.factor1);
     if (operatorElement) operatorElement.textContent = problem.operator;
     if (factor2Element) factor2Element.textContent = String(problem.factor2);
