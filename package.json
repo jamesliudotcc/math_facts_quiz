@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "start": "node ./node_modules/http-server/bin/http-server . -p 8080",
     "test": "node --test",
     "test:unit": "node --test tests/math-utils.test.js tests/math-logic.test.js tests/basic.test.js tests/submit-functionality.test.js",
     "test:dom": "node --test tests/dom-utils.test.js",
@@ -12,6 +13,10 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
+    "test:e2e:basic": "playwright test tests/e2e/basic.spec.js --headed",
+    "test:e2e:settings": "playwright test tests/e2e/settings-dialog.spec.js --headed",
+    "test:e2e:single": "playwright test tests/e2e/single-test.spec.js --headed",
+    "test:e2e:click": "playwright test tests/e2e/click-outside.spec.js --headed",
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {

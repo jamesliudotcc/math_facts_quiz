@@ -147,13 +147,7 @@ if (settingsForm) {
 if (settingsDialog) {
   settingsDialog.addEventListener("click", (event) => {
     if (event.target === settingsDialog) {
-        // Restore original checkbox states
-        for (let i = 1; i <= 10; i += 1) {
-            const checkbox = document.getElementById(`_${i}`);
-            if (checkbox instanceof HTMLInputElement) {
-                checkbox.checked = originalCheckboxStates[i];
-            }
-        }
+        // Close the dialog but keep the current checkbox states
         settingsDialog.close();
     }
   });
@@ -177,6 +171,13 @@ for (let i = 1; i <= 10; i += 1) {
 
     if (checkboxElement instanceof HTMLInputElement) {
       const checkbox = checkboxElement;
+      // Initialize selectedNumbers with checked state
+      if (checkbox.checked) {
+        selectedNumbers.add(i);
+      } else {
+        selectedNumbers.delete(i);
+      }
+
       checkbox.addEventListener("change", (/** @type {Event} */ event) => {
         /** @type {HTMLInputElement} */
         const target = /** @type {HTMLInputElement} */ (event.target);
