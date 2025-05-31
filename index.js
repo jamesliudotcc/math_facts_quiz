@@ -1,48 +1,19 @@
-// We're importing TIMES but using it indirectly through generateProblem
-// @ts-ignore: Used indirectly
-import { TIMES } from "./constants.js";
-import { generateProblem, resultIsCorrect } from "./math-utils.js";
-
-/**
- * @typedef {Object} Problem
- * @property {number} factor1 - The first factor of the problem
- * @property {number} factor2 - The second factor of the problem
- * @property {string} operator - The mathematical operator (e.g., '×')
- */
-
-/**
- * @typedef {Object} Result
- * @property {number} factor1 - The first factor of the problem
- * @property {number} factor2 - The second factor of the problem
- * @property {string} operator - The mathematical operator used
- * @property {number} answer - The user's answer to the problem
- * @property {number} time - Timestamp when the answer was submitted
- */
-
-/** @type {Result[]} */
-const history = [];
-/** @type {Problem} */
-let currentProblem = {
-  factor1: 0,
-  factor2: 0,
-  operator: "×"
-};
-/** @type {Set<number>} */
-const selectedNumbers = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+// Import from model.js instead of directly using math-utils
+import { createNewProblem, submitAnswer, updateSelectedNumber, getSelectedNumbers, clearFeedback } from "./model.js";
 
 /**
  * Displays a new math problem on the page
  * @returns {void}
  */
 const displayProblem = () => {
-    currentProblem = generateProblem(selectedNumbers);
+    const problem = createNewProblem();
     const factor1Element = document.getElementById("factor1");
     const operatorElement = document.getElementById("operator");
     const factor2Element = document.getElementById("factor2");
 
-    if (factor1Element) factor1Element.textContent = String(currentProblem.factor1);
-    if (operatorElement) operatorElement.textContent = currentProblem.operator;
-    if (factor2Element) factor2Element.textContent = String(currentProblem.factor2);
+    if (factor1Element) factor1Element.textContent = String(problem.factor1);
+    if (operatorElement) operatorElement.textContent = problem.operator;
+    if (factor2Element) factor2Element.textContent = String(problem.factor2);
 }
 
 // On page load, generate a problem and display it
@@ -59,7 +30,7 @@ const popover = document.getElementById("correct_or_incorrect");
 // Handle form submission
 const quizForm = document.getElementById("quiz");
 if (quizForm) {
-  quizForm.addEventListener("submit", (/** @type {SubmitEvent} */ event) => {
+  quizForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const answerElement = document.getElementById("answer");
     if (!(answerElement instanceof HTMLInputElement)) {
@@ -67,25 +38,21 @@ if (quizForm) {
     }
     const answerInput = answerElement;
     const value = parseInt(answerInput.value);
-    const result = {
-        factor1: currentProblem.factor1,
-        factor2: currentProblem.factor2,
-        operator: currentProblem.operator,
-        answer: value,
-        time: Date.now(),
-    };
-    if (resultIsCorrect(result)) {
-        popover.textContent = "👍";
-    } else {
-        popover.textContent = "❌";
+
+    // Use the model to handle the answer submission
+    const { isCorrect } = submitAnswer(value);
+
+    // Update the UI based on result
+    if (popover) {
+      popover.textContent = isCorrect ? "👍" : "❌";
+      popover.classList.toggle("show");
+      setTimeout(() => {
+          popover.classList.toggle("show");
+          clearFeedback(); // Clear feedback state after showing it
+      }, 1000);
     }
-    // Toggle the show class to display the popover
-    popover.classList.toggle("show");
-    setTimeout(() => {
-        popover.classList.toggle("show");
-    }, 1000);
-    history.push(result);
-    console.log({history});
+
+    // Reset and focus
     answerInput.value = "";
     displayProblem();
     answerInput.focus();
@@ -104,10 +71,6 @@ if (answerInput) {
   });
 }
 
-// Store original checkbox states for cancellation
-/** @type {Record<number, boolean>} */
-let originalCheckboxStates = {};
-
 // Get dialog and button elements
 const dialogElement = document.getElementById("settings-dialog");
 const buttonElement = document.getElementById("settings-button");
@@ -118,17 +81,16 @@ const settingsDialog = dialogElement instanceof HTMLDialogElement ? dialogElemen
 const settingsButton = buttonElement instanceof HTMLButtonElement ? buttonElement : null;
 const settingsForm = formElement instanceof HTMLFormElement ? formElement : null;
 
-// Open dialog and save original checkbox states
+// Open dialog and update checkboxes
 if (settingsButton && settingsDialog) {
   settingsButton.addEventListener("click", () => {
-    // Update checkboxes to match the current selectedNumbers set
+    // Update checkboxes to match the current model state
+    const selectedNumbers = getSelectedNumbers();
     for (let i = 1; i <= 10; i += 1) {
         const checkboxElement = document.getElementById(`_${i}`);
         if (checkboxElement instanceof HTMLInputElement) {
             const checkbox = checkboxElement;
             checkbox.checked = selectedNumbers.has(i);
-            // Save the current state for potential cancellation
-            originalCheckboxStates[i] = checkbox.checked;
         }
     }
     settingsDialog.showModal();
@@ -171,22 +133,18 @@ for (let i = 1; i <= 10; i += 1) {
 
     if (checkboxElement instanceof HTMLInputElement) {
       const checkbox = checkboxElement;
-      // Initialize selectedNumbers with checked state
-      if (checkbox.checked) {
-        selectedNumbers.add(i);
-      } else {
-        selectedNumbers.delete(i);
-      }
 
-      checkbox.addEventListener("change", (/** @type {Event} */ event) => {
-        /** @type {HTMLInputElement} */
-        const target = /** @type {HTMLInputElement} */ (event.target);
-        if (target.checked) {
-            selectedNumbers.add(i);
-        } else {
-            selectedNumbers.delete(i);
+      // Initialize using the model's state
+      const selectedNumbers = getSelectedNumbers();
+      checkbox.checked = selectedNumbers.has(i);
+
+      checkbox.addEventListener("change", (event) => {
+        const target = event.target;
+        if (target instanceof HTMLInputElement) {
+          // Update the model
+          updateSelectedNumber(i, target.checked);
+          console.log("Selected numbers:", [...getSelectedNumbers()]);
         }
-        console.log("Selected numbers:", [...selectedNumbers]);
       });
     }
 };
