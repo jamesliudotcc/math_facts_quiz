@@ -1,5 +1,5 @@
 // Import from model.js instead of directly using math-utils
-import { createNewProblem, submitAnswer, updateSelectedNumber, getSelectedNumbers, clearFeedback } from "./model.js";
+import {clearFeedback, createNewProblem, getSelectedNumbers, submitAnswer, updateSelectedNumber} from "./model.js";
 
 /**
  * Displays a new math problem on the page
@@ -89,8 +89,7 @@ if (settingsButton && settingsDialog) {
     for (let i = 1; i <= 10; i += 1) {
         const checkboxElement = document.getElementById(`_${i}`);
         if (checkboxElement instanceof HTMLInputElement) {
-            const checkbox = checkboxElement;
-            checkbox.checked = selectedNumbers.has(i);
+            checkboxElement.checked = selectedNumbers.has(i);
         }
     }
     settingsDialog.showModal();
