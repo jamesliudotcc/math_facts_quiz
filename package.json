@@ -11,15 +11,17 @@
     "test:integration": "node --test tests/integration.test.js",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "type-check": "tsc --noEmit"
   },
-  "dependencies": {},
   "devDependencies": {
     "@babel/preset-env": "^7.22.5",
     "@playwright/test": "^1.40.0",
     "@testing-library/dom": "^9.3.1",
     "@testing-library/jest-dom": "^5.16.5",
+    "@types/node": "^22.15.29",
     "http-server": "^14.1.1",
-    "jsdom": "^22.1.0"
+    "jsdom": "^22.1.0",
+    "typescript": "^5.3.3"
   }
 }

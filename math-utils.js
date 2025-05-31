@@ -1,9 +1,25 @@
 import { TIMES } from "./constants.js";
 
 /**
+ * @typedef {Object} Problem
+ * @property {number} factor1 - The first factor of the problem
+ * @property {number} factor2 - The second factor of the problem
+ * @property {string} operator - The mathematical operator (e.g., '×')
+ */
+
+/**
+ * @typedef {Object} Result
+ * @property {number} factor1 - The first factor of the problem
+ * @property {number} factor2 - The second factor of the problem
+ * @property {string} operator - The mathematical operator used
+ * @property {number} answer - The user's answer to the problem
+ * @property {number} [time] - Timestamp when the answer was submitted
+ */
+
+/**
  * Generates a multiplication problem based on the selected numbers
  * @param {Set<number>} selectedNumbers - Set of numbers to use for problem generation
- * @returns {Object} A problem object with factor1, factor2, and operator
+ * @returns {Problem} A problem object with factor1, factor2, and operator
  */
 export const generateProblem = (selectedNumbers) => {
     // Convert Set to Array for random selection
@@ -31,7 +47,7 @@ export const generateProblem = (selectedNumbers) => {
 
 /**
  * Checks if the provided answer is correct for the given problem
- * @param {Object} result - The result object containing the problem and answer
+ * @param {Result} result - The result object containing the problem and answer
  * @returns {boolean} Whether the answer is correct
  */
 export const resultIsCorrect = (result) => {

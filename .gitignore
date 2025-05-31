@@ -16,7 +16,21 @@ node_modules
 dist
 dist-ssr
 *.local
+# TypeScript related
+*.tsbuildinfo
 
+# node modules
+node_modules/
+
+# IDE files
+.vscode/*
+!.vscode/settings.json
+
+# Test related
+coverage/
+/test-results/
+/playwright-report/
+/playwright/.cache/
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
