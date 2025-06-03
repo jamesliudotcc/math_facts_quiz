@@ -1,32 +1,34 @@
 import { TIMES } from "./constants.js";
 
 /**
+ * @typedef {import('./model').Operator} Operator
+ */
+
+/**
  * @typedef {Object} Problem
  * @property {number} factor1 - The first factor of the problem
  * @property {number} factor2 - The second factor of the problem
- * @property {string} operator - The mathematical operator (e.g., '×')
+ * @property {Operator} operator - The mathematical operator (e.g., '×')
  */
 
 /**
  * @typedef {Object} Result
  * @property {number} factor1 - The first factor of the problem
  * @property {number} factor2 - The second factor of the problem
- * @property {string} operator - The mathematical operator used
+ * @property {Operator} operator - The mathematical operator used
  * @property {number} answer - The user's answer to the problem
  * @property {number} [time] - Timestamp when the answer was submitted
  */
 
 /**
- * Generates a multiplication problem based on the selected numbers
- * @param {Set<number>} selectedNumbers - Set of numbers to use for problem generation
+ * Generates a problem based on the selected numbers and operator
+ * @param {number[]} selectedNumbers - Array of numbers to use for problem generation
+ * @param {Operator} [operator=TIMES] - The operator to use (default: TIMES)
  * @returns {Problem} A problem object with factor1, factor2, and operator
  */
-export const generateProblem = (selectedNumbers) => {
-    // Convert Set to Array for random selection
-    const numbersArray = [...selectedNumbers];
-
+export const generateProblem = (selectedNumbers, operator = TIMES) => {
     // Only generate problems if we have numbers to work with
-    if (numbersArray.length === 0) {
+    if (selectedNumbers.length === 0) {
         return {
             factor1: 0,
             factor2: 0,
@@ -35,13 +37,13 @@ export const generateProblem = (selectedNumbers) => {
     }
 
     // Randomly select numbers from the selectedNumbers
-    const randomIndex1 = Math.floor(Math.random() * numbersArray.length);
-    const randomIndex2 = Math.floor(Math.random() * numbersArray.length);
+    const randomIndex1 = Math.floor(Math.random() * selectedNumbers.length);
+    const randomIndex2 = Math.floor(Math.random() * selectedNumbers.length);
 
     return {
-        factor1: numbersArray[randomIndex1],
-        factor2: numbersArray[randomIndex2],
-        operator: TIMES,
+        factor1: selectedNumbers[randomIndex1],
+        factor2: selectedNumbers[randomIndex2],
+        operator, // Use the provided operator (or default TIMES)
     };
 };
 

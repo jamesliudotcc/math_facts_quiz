@@ -1,10 +1,25 @@
 import { Problem, Result } from './math-utils';
 
+/**
+ * Operator type - currently only multiplication
+ */
+export type Operator = "×";
+
+/**
+ * Represents a possible problem type with its operator and available numbers
+ */
+export interface PossibleProblem {
+  operator: Operator;
+  number1: number;
+  number2: number;
+}
+
 export interface ModelState {
   history: Result[];
   currentProblem: Problem;
-  selectedNumbers: Set<number>;
+  selectedNumbers: number[];
   feedback: 'correct' | 'incorrect' | null;
+  possibleProblems: PossibleProblem[];
 }
 
 export interface SubmitResult {
@@ -12,6 +27,11 @@ export interface SubmitResult {
   isCorrect: boolean;
   feedback: 'correct' | 'incorrect';
 }
+
+/**
+ * The current state of the model
+ */
+export const state: ModelState;
 
 /**
  * Gets a copy of the current state
@@ -36,9 +56,16 @@ export function clearFeedback(): void;
 /**
  * Updates the selected numbers
  */
-export function updateSelectedNumber(number: number, selected: boolean): Set<number>;
+export function updateSelectedNumber(number: number, selected: boolean): number[];
 
 /**
  * Gets the currently selected numbers
  */
-export function getSelectedNumbers(): Set<number>;
+export function getSelectedNumbers(): number[];
+
+/**
+ * Generates all possible problem combinations using selected numbers
+ * @param selectedNumbers - The currently selected numbers
+ * @param operator - The operator to use (default: TIMES)
+ */
+export function generatePossibleProblems(selectedNumbers: number[], operator?: Operator): PossibleProblem[];

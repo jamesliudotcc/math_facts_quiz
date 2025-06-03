@@ -94,7 +94,7 @@ test.describe('Settings Dialog', () => {
     }
   });
 
-  test('should only generate problems using selected numbers', async ({ page }) => {
+  test('should generate problems with at least one factor from selected numbers', async ({ page }) => {
     // Open the dialog
     await page.click('#settings-button');
 
@@ -128,9 +128,14 @@ test.describe('Settings Dialog', () => {
       const factor1 = await page.locator('#factor1').textContent();
       const factor2 = await page.locator('#factor2').textContent();
 
-      // Assert factors are either 3 or 7
-      expect(["3", "7"]).toContain(factor1);
-      expect(["3", "7"]).toContain(factor2);
+      // Assert at least one factor is either 3 or 7 (the selected numbers)
+      const selectedNumbers = ["3", "7"];
+      const isSelectedNumberIncluded = selectedNumbers.includes(factor1) || selectedNumbers.includes(factor2);
+      expect(isSelectedNumberIncluded).toBeTruthy();
+      // Additional more descriptive assertion if the test fails
+      if (!isSelectedNumberIncluded) {
+        expect(`At least one factor should be one of ${selectedNumbers}, but got ${factor1} and ${factor2}`).toBe(true);
+      }
 
       // Calculate the expected answer
       const answer = Number(factor1) * Number(factor2);

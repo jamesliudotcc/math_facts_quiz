@@ -20,7 +20,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'node ./node_modules/http-server/bin/http-server . -p 8080',
+    command: 'live-server --port=8080 --no-browser --entry-file=index.html --middleware=./live-server-middleware.js',
     url: 'http://localhost:8080',
     reuseExistingServer: !process.env.CI,
   },

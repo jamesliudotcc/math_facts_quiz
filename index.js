@@ -1,5 +1,5 @@
 // Import from model.js instead of directly using math-utils
-import {clearFeedback, createNewProblem, getSelectedNumbers, submitAnswer, updateSelectedNumber} from "./model.js";
+import {clearFeedback, createNewProblem, getSelectedNumbers, state, submitAnswer, updateSelectedNumber} from "./model.js";
 
 /**
  * Displays a new math problem on the page
@@ -25,10 +25,40 @@ window.addEventListener("load", () => {
     // set focus on the input
     const answerInput = document.getElementById("answer");
     if (answerInput) answerInput.focus();
-})
+});
 
 /** @type {HTMLElement | null} */
 const popover = document.getElementById("correct_or_incorrect");
+
+/**
+ * Processes the user's answer submission and updates the UI with feedback
+ * @param {HTMLInputElement} answerInput - The input element containing the user's answer
+ * @param {HTMLElement} popover - The popover element used to display feedback
+ * @returns {void}
+ */
+const handleAnswerSubmission = (answerInput, popover) => {
+  const value = parseInt(answerInput.value);
+
+  // Use the model to handle the answer submission
+  const { isCorrect } = submitAnswer(value);
+
+  // Update the UI based on result
+  if (popover) {
+    popover.textContent = isCorrect ? "👍" : "❌";
+    popover.classList.toggle("show");
+    setTimeout(() => {
+      popover.classList.toggle("show");
+      clearFeedback(); // Clear feedback state after showing it
+    }, 1000);
+  }
+
+  // Clear the answer input and generate a new problem
+  answerInput.value = "";
+  displayProblem();
+
+  // Focus back on the input field for better UX
+  answerInput.focus();
+};
 
 // Handle form submission
 const quizForm = document.getElementById("quiz");
@@ -39,26 +69,10 @@ if (quizForm) {
     if (!(answerElement instanceof HTMLInputElement)) {
       return; // Exit if not found or wrong type
     }
-    const answerInput = answerElement;
-    const value = parseInt(answerInput.value);
 
-    // Use the model to handle the answer submission
-    const { isCorrect } = submitAnswer(value);
+    handleAnswerSubmission(answerElement, popover);
 
-    // Update the UI based on result
-    if (popover) {
-      popover.textContent = isCorrect ? "👍" : "❌";
-      popover.classList.toggle("show");
-      setTimeout(() => {
-          popover.classList.toggle("show");
-          clearFeedback(); // Clear feedback state after showing it
-      }, 1000);
-    }
-
-    // Reset and focus
-    answerInput.value = "";
-    displayProblem();
-    answerInput.focus();
+    console.log(state);
   });
 }
 
@@ -92,10 +106,13 @@ if (settingsButton && settingsDialog) {
     for (let i = 1; i <= 10; i += 1) {
         const checkboxElement = document.getElementById(`_${i}`);
         if (checkboxElement instanceof HTMLInputElement) {
-            checkboxElement.checked = selectedNumbers.has(i);
+            checkboxElement.checked = selectedNumbers.includes(i);
         }
     }
-    settingsDialog.showModal();
+    // Make sure the dialog is shown with the showModal method
+    if (!settingsDialog.open) {
+      settingsDialog.showModal();
+    }
   });
 }
 
@@ -109,11 +126,19 @@ if (settingsForm) {
 
 // Handle dialog cancellation (clicking outside)
 if (settingsDialog) {
+  // Handle click outside to close
   settingsDialog.addEventListener("click", (event) => {
     if (event.target === settingsDialog) {
         // Close the dialog but keep the current checkbox states
         settingsDialog.close();
     }
+  });
+
+  // Ensure escape key is also properly handled
+  settingsDialog.addEventListener("cancel", (event) => {
+    // Prevent default to ensure our custom closing logic runs
+    event.preventDefault();
+    settingsDialog.close();
   });
 }
 
@@ -123,7 +148,10 @@ if (settingsDialog) {
     // Focus back on the answer input
     const answerInput = document.getElementById("answer");
     if (answerInput) {
-      answerInput.focus();
+      // Use setTimeout to ensure focus happens after any other operations
+      setTimeout(() => {
+        answerInput.focus();
+      }, 0);
     }
   });
 }
@@ -138,14 +166,14 @@ for (let i = 1; i <= 10; i += 1) {
 
       // Initialize using the model's state
       const selectedNumbers = getSelectedNumbers();
-      checkbox.checked = selectedNumbers.has(i);
+      checkbox.checked = selectedNumbers.includes(i);
 
       checkbox.addEventListener("change", (event) => {
         const target = event.target;
         if (target instanceof HTMLInputElement) {
           // Update the model
           updateSelectedNumber(i, target.checked);
-          console.log("Selected numbers:", [...getSelectedNumbers()]);
+          console.log('Current state:', state);
         }
       });
     }
