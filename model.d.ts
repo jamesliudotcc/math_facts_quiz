@@ -1,9 +1,9 @@
 import { Problem, Result } from './math-utils';
 
 /**
- * Operator type - currently only multiplication
+ * Operator type
  */
-export type Operator = "×";
+export type Operator = "×" | "÷";
 
 /**
  * Represents a possible problem type with its operator and available numbers
@@ -20,6 +20,7 @@ export interface ModelState {
   selectedNumbers: number[];
   feedback: 'correct' | 'incorrect' | null;
   possibleProblems: PossibleProblem[];
+  selectedOperator: Operator;
 }
 
 export interface SubmitResult {
@@ -62,6 +63,16 @@ export function updateSelectedNumber(number: number, selected: boolean): number[
  * Gets the currently selected numbers
  */
 export function getSelectedNumbers(): number[];
+
+/**
+ * Updates the selected operator
+ */
+export function updateSelectedOperator(operator: Operator): void;
+
+/**
+ * Gets the currently selected operator
+ */
+export function getSelectedOperator(): Operator;
 
 /**
  * Generates all possible problem combinations using selected numbers

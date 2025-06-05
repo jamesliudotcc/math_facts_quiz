@@ -1,5 +1,9 @@
-// Import from model.js instead of directly using math-utils
-import {clearFeedback, createNewProblem, getSelectedNumbers, state, submitAnswer, updateSelectedNumber} from "./model.js";
+// Import from model.js and constants.js
+import {
+    clearFeedback, createNewProblem, getSelectedNumbers, state, submitAnswer, updateSelectedNumber,
+    updateSelectedOperator, getSelectedOperator // Added new imports
+} from "./model.js";
+import { TIMES, DIVIDE } from "./constants.js"; // Added new imports
 
 /**
  * Displays a new math problem on the page
@@ -15,7 +19,7 @@ const displayProblem = () => {
 
     // Update the elements with the new problem data
     if (factor1Element) factor1Element.textContent = String(problem.factor1);
-    if (operatorElement) operatorElement.textContent = problem.operator;
+    if (operatorElement) operatorElement.textContent = problem.operator; // This should now correctly show ÷ or ×
     if (factor2Element) factor2Element.textContent = String(problem.factor2);
 }
 
@@ -30,53 +34,37 @@ window.addEventListener("load", () => {
 /** @type {HTMLElement | null} */
 const popover = document.getElementById("correct_or_incorrect");
 
-/**
- * Processes the user's answer submission and updates the UI with feedback
- * @param {HTMLInputElement} answerInput - The input element containing the user's answer
- * @param {HTMLElement} popover - The popover element used to display feedback
- * @returns {void}
- */
 const handleAnswerSubmission = (answerInput, popover) => {
   const value = parseInt(answerInput.value);
-
-  // Use the model to handle the answer submission
   const { isCorrect } = submitAnswer(value);
 
-  // Update the UI based on result
   if (popover) {
     popover.textContent = isCorrect ? "👍" : "❌";
     popover.classList.toggle("show");
     setTimeout(() => {
       popover.classList.toggle("show");
-      clearFeedback(); // Clear feedback state after showing it
+      clearFeedback();
     }, 1000);
   }
 
-  // Clear the answer input and generate a new problem
   answerInput.value = "";
   displayProblem();
-
-  // Focus back on the input field for better UX
   answerInput.focus();
 };
 
-// Handle form submission
 const quizForm = document.getElementById("quiz");
 if (quizForm) {
   quizForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const answerElement = document.getElementById("answer");
     if (!(answerElement instanceof HTMLInputElement)) {
-      return; // Exit if not found or wrong type
+      return;
     }
-
     handleAnswerSubmission(answerElement, popover);
-
     console.log(state);
   });
 }
 
-// Add this after the existing event listeners
 const answerInput = document.getElementById("answer");
 if (answerInput) {
   answerInput.addEventListener("blur", (/** @type {FocusEvent} */ event) => {
@@ -84,24 +72,25 @@ if (answerInput) {
         /** @type {HTMLInputElement} */
         const target = /** @type {HTMLInputElement} */ (event.target);
         target.focus();
-    }, 100); // 100 is milliseconds
+    }, 100);
   });
 }
 
-// Get dialog and button elements
 const dialogElement = document.getElementById("settings-dialog");
 const buttonElement = document.getElementById("settings-button");
 const formElement = document.getElementById("settings-form");
 
-// Cast to specific types if they exist
 const settingsDialog = dialogElement instanceof HTMLDialogElement ? dialogElement : null;
 const settingsButton = buttonElement instanceof HTMLButtonElement ? buttonElement : null;
 const settingsForm = formElement instanceof HTMLFormElement ? formElement : null;
 
-// Open dialog and update checkboxes
+// Get radio buttons for operations
+const opMultiplyRadio = document.getElementById("op-multiply");
+const opDivideRadio = document.getElementById("op-divide");
+
 if (settingsButton && settingsDialog) {
   settingsButton.addEventListener("click", () => {
-    // Update checkboxes to match the current model state
+    // Update number checkboxes to match the current model state
     const selectedNumbers = getSelectedNumbers();
     for (let i = 1; i <= 10; i += 1) {
         const checkboxElement = document.getElementById(`_${i}`);
@@ -109,46 +98,65 @@ if (settingsButton && settingsDialog) {
             checkboxElement.checked = selectedNumbers.includes(i);
         }
     }
-    // Make sure the dialog is shown with the showModal method
+
+    // Update operation radio buttons to match current model state
+    const currentOperator = getSelectedOperator();
+    if (opMultiplyRadio instanceof HTMLInputElement && opDivideRadio instanceof HTMLInputElement) {
+        if (currentOperator === TIMES) {
+            opMultiplyRadio.checked = true;
+        } else if (currentOperator === DIVIDE) {
+            opDivideRadio.checked = true;
+        }
+    }
+
     if (!settingsDialog.open) {
       settingsDialog.showModal();
     }
   });
 }
 
-// Handle dialog submission (OK button)
+// Event listeners for operation radio buttons
+if (opMultiplyRadio instanceof HTMLInputElement) {
+    opMultiplyRadio.addEventListener("change", () => {
+        if (opMultiplyRadio.checked) {
+            updateSelectedOperator(TIMES);
+            console.log("Selected operator:", TIMES, state);
+        }
+    });
+}
+
+if (opDivideRadio instanceof HTMLInputElement) {
+    opDivideRadio.addEventListener("change", () => {
+        if (opDivideRadio.checked) {
+            updateSelectedOperator(DIVIDE);
+            console.log("Selected operator:", DIVIDE, state);
+        }
+    });
+}
+
+
 if (settingsForm) {
   settingsForm.addEventListener("submit", () => {
-      // Generate a new problem when settings are confirmed
-      displayProblem();
+      displayProblem(); // This will now use the potentially updated operator
   });
 }
 
-// Handle dialog cancellation (clicking outside)
 if (settingsDialog) {
-  // Handle click outside to close
   settingsDialog.addEventListener("click", (event) => {
     if (event.target === settingsDialog) {
-        // Close the dialog but keep the current checkbox states
         settingsDialog.close();
     }
   });
-
-  // Ensure escape key is also properly handled
   settingsDialog.addEventListener("cancel", (event) => {
-    // Prevent default to ensure our custom closing logic runs
     event.preventDefault();
     settingsDialog.close();
   });
 }
 
-// Focus input when the dialog is closed (for both OK and cancel cases)
 if (settingsDialog) {
   settingsDialog.addEventListener("close", () => {
-    // Focus back on the answer input
     const answerInput = document.getElementById("answer");
     if (answerInput) {
-      // Use setTimeout to ensure focus happens after any other operations
       setTimeout(() => {
         answerInput.focus();
       }, 0);
@@ -156,24 +164,26 @@ if (settingsDialog) {
   });
 }
 
-// Add event listeners to checkboxes for selecting numbers
 for (let i = 1; i <= 10; i += 1) {
     const checkboxId = `_${i}`;
     const checkboxElement = document.getElementById(checkboxId);
 
     if (checkboxElement instanceof HTMLInputElement) {
       const checkbox = checkboxElement;
+      // const selectedNumbers = getSelectedNumbers(); // Initial state from original prompt, moved down
+      // checkbox.checked = selectedNumbers.includes(i); // Moved down
 
-      // Initialize using the model's state
-      const selectedNumbers = getSelectedNumbers();
-      checkbox.checked = selectedNumbers.includes(i);
+      // Initialize checkbox state based on model when settings dialog is populated or script initially runs
+      // For initial load of the page, this loop runs and sets checkbox states.
+      // When settings dialog is opened, the state is re-synced anyway.
+      checkbox.checked = getSelectedNumbers().includes(i);
+
 
       checkbox.addEventListener("change", (event) => {
         const target = event.target;
         if (target instanceof HTMLInputElement) {
-          // Update the model
           updateSelectedNumber(i, target.checked);
-          console.log('Current state:', state);
+          console.log('Current state (number change):', state);
         }
       });
     }
