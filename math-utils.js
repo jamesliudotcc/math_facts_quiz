@@ -1,4 +1,4 @@
-import { TIMES } from "./constants.js";
+import { TIMES, DIVIDE } from "./constants.js"; // Import DIVIDE
 
 /**
  * @typedef {import('./model').Operator} Operator
@@ -8,7 +8,7 @@ import { TIMES } from "./constants.js";
  * @typedef {Object} Problem
  * @property {number} factor1 - The first factor of the problem
  * @property {number} factor2 - The second factor of the problem
- * @property {Operator} operator - The mathematical operator (e.g., '×')
+ * @property {Operator} operator - The mathematical operator (e.g., '×', '÷')
  */
 
 /**
@@ -21,29 +21,57 @@ import { TIMES } from "./constants.js";
  */
 
 /**
- * Generates a problem based on the selected numbers and operator
+ * Generates a problem based on the selected numbers and operator.
+ * Note: This function provides a basic way to generate a single problem.
+ * For more controlled and comprehensive problem set generation (especially for division),
+ * refer to `generatePossibleProblems` in `model.js`.
  * @param {number[]} selectedNumbers - Array of numbers to use for problem generation
  * @param {Operator} [operator=TIMES] - The operator to use (default: TIMES)
  * @returns {Problem} A problem object with factor1, factor2, and operator
  */
 export const generateProblem = (selectedNumbers, operator = TIMES) => {
-    // Only generate problems if we have numbers to work with
     if (selectedNumbers.length === 0) {
-        return {
-            factor1: 0,
-            factor2: 0,
-            operator: TIMES
-        };
+        // If no numbers are selected, return a default problem based on the operator
+        if (operator === DIVIDE) {
+            return { factor1: 4, factor2: 2, operator: DIVIDE }; // Default division
+        }
+        return { factor1: 1, factor2: 1, operator: TIMES }; // Default multiplication
     }
 
-    // Randomly select numbers from the selectedNumbers
-    const randomIndex1 = Math.floor(Math.random() * selectedNumbers.length);
-    const randomIndex2 = Math.floor(Math.random() * selectedNumbers.length);
+    let factor1, factor2;
+
+    if (operator === DIVIDE) {
+        // Attempt to find a valid division problem, try a few times
+        // This is a simplistic approach for this standalone function.
+        // `model.js/generatePossibleProblems` has more robust logic.
+        let attempts = 0;
+        const maxAttempts = 20; // Try to find a divisible pair
+        do {
+            const randomIndex1 = Math.floor(Math.random() * selectedNumbers.length);
+            const randomIndex2 = Math.floor(Math.random() * selectedNumbers.length);
+            factor1 = selectedNumbers[randomIndex1];
+            factor2 = selectedNumbers[randomIndex2];
+            attempts++;
+            // Ensure factor2 is not zero and factor1 is divisible by factor2, and quotient >= 1 (factor1 >= factor2)
+        } while (attempts < maxAttempts && (factor2 === 0 || factor1 % factor2 !== 0 || factor1 < factor2));
+
+        // If no valid pair found after attempts, return a default or indicate error
+        if (factor2 === 0 || factor1 % factor2 !== 0 || factor1 < factor2) {
+            // Fallback to a known good division problem or default
+            // This case should be rare if selectedNumbers is diverse and contains suitable pairs
+            return { factor1: 4, factor2: 2, operator: DIVIDE };
+        }
+    } else { // For TIMES or any other future operators by default
+        const randomIndex1 = Math.floor(Math.random() * selectedNumbers.length);
+        const randomIndex2 = Math.floor(Math.random() * selectedNumbers.length);
+        factor1 = selectedNumbers[randomIndex1];
+        factor2 = selectedNumbers[randomIndex2];
+    }
 
     return {
-        factor1: selectedNumbers[randomIndex1],
-        factor2: selectedNumbers[randomIndex2],
-        operator, // Use the provided operator (or default TIMES)
+        factor1,
+        factor2,
+        operator,
     };
 };
 
@@ -55,6 +83,12 @@ export const generateProblem = (selectedNumbers, operator = TIMES) => {
 export const resultIsCorrect = (result) => {
     if (result.operator === TIMES) {
         return result.answer === result.factor1 * result.factor2;
+    } else if (result.operator === DIVIDE) {
+        // Ensure factor2 is not zero before division, though problem generation should prevent this.
+        if (result.factor2 === 0) {
+            return false; // Division by zero is incorrect / impossible
+        }
+        return result.answer === result.factor1 / result.factor2;
     }
-    return false;
+    return false; // Default for unknown operators
 };
