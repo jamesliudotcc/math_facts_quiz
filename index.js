@@ -1,9 +1,40 @@
 // Import from model.js and constants.js
 import {
     clearFeedback, createNewProblem, getSelectedNumbers, state, submitAnswer, updateSelectedNumber,
-    updateSelectedOperator, getSelectedOperator // Added new imports
+    updateSelectedOperator, getSelectedOperator, resetProgress
 } from "./model.js";
-import { TIMES, DIVIDE } from "./constants.js"; // Added new imports
+import { TIMES, DIVIDE } from "./constants.js";
+
+/**
+ * Renders the mastery grid based on current SRS stats
+ */
+const renderMasteryGrid = () => {
+    const grid = document.getElementById("mastery-grid");
+    if (!grid) return;
+    grid.innerHTML = "";
+
+    const operator = getSelectedOperator();
+
+    for (let f1 = 1; f1 <= 10; f1++) {
+        for (let f2 = 1; f2 <= 10; f2++) {
+            const cell = document.createElement("div");
+            cell.className = "mastery-cell";
+            
+            const key = `${f1},${f2},${operator}`;
+            const stats = state.problemStats[key];
+            
+            let level = 0;
+            if (stats) {
+                // Determine level based on repetitions (0-5)
+                level = Math.min(stats.repetitions, 5);
+            }
+            
+            cell.classList.add(`level-${level}`);
+            cell.title = `${f1} ${operator} ${f2}: ${level}/5 mastery`;
+            grid.appendChild(cell);
+        }
+    }
+};
 
 /**
  * Displays a new math problem on the page
@@ -110,6 +141,7 @@ if (settingsButton && settingsDialog) {
     }
 
     if (!settingsDialog.open) {
+      renderMasteryGrid();
       settingsDialog.showModal();
     }
   });
@@ -130,6 +162,16 @@ if (opDivideRadio instanceof HTMLInputElement) {
         if (opDivideRadio.checked) {
             updateSelectedOperator(DIVIDE);
             console.log("Selected operator:", DIVIDE, state);
+        }
+    });
+}
+
+const resetButton = document.getElementById("reset-progress");
+if (resetButton) {
+    resetButton.addEventListener("click", () => {
+        if (confirm("Are you sure you want to reset all progress?")) {
+            resetProgress();
+            renderMasteryGrid();
         }
     });
 }

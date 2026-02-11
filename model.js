@@ -1,5 +1,6 @@
 import { resultIsCorrect } from "./math-utils.js";
-import { TIMES, DIVIDE } from "./constants.js"; // Added DIVIDE
+import { TIMES, DIVIDE } from "./constants.js";
+import { updateSRSStats } from "./srs.js";
 
 /**
  * Generates all possible problem combinations using selected numbers.
@@ -85,17 +86,57 @@ export const generatePossibleProblems = (selectedNumbers, operator) => {
 };
 
 // Model state
-export const state = {
-  history: [],
-  currentProblem: {
-    factor1: 0,
-    factor2: 0,
-    operator: TIMES
-  },
-  selectedOperator: TIMES, // Added selectedOperator, initialized to TIMES
-  possibleProblems: generatePossibleProblems([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], TIMES),
-  selectedNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-  feedback: null
+const DEFAULT_SELECTED_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+const loadState = () => {
+  const defaultState = {
+    history: [],
+    currentProblem: {
+      factor1: 0,
+      factor2: 0,
+      operator: TIMES
+    },
+    selectedOperator: TIMES,
+    selectedNumbers: [...DEFAULT_SELECTED_NUMBERS],
+    feedback: null,
+    problemStats: {}, // Key: "num1,num2,op", Value: { nextReview, interval, easeFactor, repetitions }
+    startTime: 0
+  };
+
+  try {
+    const saved = localStorage.getItem('mathFactsState');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        ...defaultState,
+        ...parsed,
+        // Ensure we don't overwrite the entire state if some keys are missing
+        selectedNumbers: parsed.selectedNumbers || defaultState.selectedNumbers,
+        selectedOperator: parsed.selectedOperator || defaultState.selectedOperator,
+        problemStats: parsed.problemStats || defaultState.problemStats,
+        history: [] // Reset history on load for now
+      };
+    }
+  } catch (e) {
+    console.warn('Could not load state from localStorage', e);
+  }
+  return defaultState;
+};
+
+export const state = loadState();
+state.possibleProblems = generatePossibleProblems(state.selectedNumbers, state.selectedOperator);
+
+export const saveState = () => {
+  try {
+    const toSave = {
+      selectedNumbers: state.selectedNumbers,
+      selectedOperator: state.selectedOperator,
+      problemStats: state.problemStats
+    };
+    localStorage.setItem('mathFactsState', JSON.stringify(toSave));
+  } catch (e) {
+    console.warn('Could not save state to localStorage', e);
+  }
 };
 
 /**
@@ -107,7 +148,8 @@ export const getState = () => ({
   currentProblem: { ...state.currentProblem },
   selectedNumbers: [...state.selectedNumbers],
   history: [...state.history],
-  selectedOperator: state.selectedOperator // Ensure this is copied
+  selectedOperator: state.selectedOperator,
+  problemStats: { ...state.problemStats }
 });
 
 /**
@@ -121,29 +163,65 @@ export const createNewProblem = () => {
   if (state.possibleProblems.length === 0) {
     // If no problems can be generated, set a default or error state
     state.currentProblem = {
-      factor1: 0, // Or some indicator of no problem
-      factor2: 0, // Or some indicator of no problem
-      operator: state.selectedOperator // Use selected operator
+      factor1: 0,
+      factor2: 0,
+      operator: state.selectedOperator
     };
-    // Potentially provide a default problem if none can be generated for division
     if (state.selectedOperator === DIVIDE) {
-        // This is a fallback, ideally UI should prevent situations where no problems can be made.
-        // For example, if selectedNumbers only contains {1, 2} and DIVIDE is chosen, 2/1 is possible.
-        // If selectedNumbers is {7} and DIVIDE, no problem.
-        // Fallback to a generic easy division problem or indicate no problem available.
-        state.currentProblem = { factor1: 4, factor2: 2, operator: DIVIDE }; // Example placeholder
+        state.currentProblem = { factor1: 4, factor2: 2, operator: DIVIDE };
     }
     return { ...state.currentProblem };
   }
 
-  const randomIndex = Math.floor(Math.random() * state.possibleProblems.length);
-  const chosenProblem = state.possibleProblems[randomIndex];
+  // SRS Selection Logic
+  const now = Date.now();
+  const opSymbol = state.selectedOperator;
+  
+  // 1. Find overdue problems from the possible problems pool
+  const overdue = state.possibleProblems.filter(p => {
+    const key = `${p.number1},${p.number2},${opSymbol}`;
+    const stats = state.problemStats[key];
+    return stats && stats.nextReview <= now;
+  });
+
+  // 2. Find new problems (never seen)
+  const newProblems = state.possibleProblems.filter(p => {
+    const key = `${p.number1},${p.number2},${opSymbol}`;
+    return !state.problemStats[key];
+  });
+
+  let chosenProblem;
+
+  if (overdue.length > 0) {
+    // Pick the most overdue one
+    overdue.sort((a, b) => {
+      const keyA = `${a.number1},${a.number2},${opSymbol}`;
+      const keyB = `${b.number1},${b.number2},${opSymbol}`;
+      return state.problemStats[keyA].nextReview - state.problemStats[keyB].nextReview;
+    });
+    chosenProblem = overdue[0];
+  } else if (newProblems.length > 0) {
+    // Pick a random new problem
+    const randomIndex = Math.floor(Math.random() * newProblems.length);
+    chosenProblem = newProblems[randomIndex];
+  } else {
+    // Everything has been seen and nothing is due.
+    // Pick the one that is closest to being due (or most overdue if we missed it somehow)
+    const allStats = state.possibleProblems.map(p => {
+      const key = `${p.number1},${p.number2},${opSymbol}`;
+      return { problem: p, stats: state.problemStats[key] };
+    });
+    allStats.sort((a, b) => a.stats.nextReview - b.stats.nextReview);
+    chosenProblem = allStats[0].problem;
+  }
 
   state.currentProblem = {
     factor1: chosenProblem.number1,
     factor2: chosenProblem.number2,
-    operator: chosenProblem.operator // This should align with state.selectedOperator
+    operator: chosenProblem.operator
   };
+
+  state.startTime = Date.now();
 
   return { ...state.currentProblem };
 };
@@ -154,15 +232,25 @@ export const createNewProblem = () => {
  * @returns {Object} Result of the submission including feedback
  */
 export const submitAnswer = (answer) => {
+  const now = Date.now();
+  const responseTime = now - state.startTime;
+  
   const result = {
     factor1: state.currentProblem.factor1,
     factor2: state.currentProblem.factor2,
     operator: state.currentProblem.operator,
     answer: answer,
-    time: Date.now(),
+    time: now,
+    responseTime: responseTime
   };
 
   const isCorrect = resultIsCorrect(result);
+  
+  // Update SRS stats
+  const problemKey = `${result.factor1},${result.factor2},${result.operator}`;
+  state.problemStats = updateSRSStats(state.problemStats, problemKey, isCorrect, responseTime);
+  saveState();
+
   state.feedback = isCorrect ? 'correct' : 'incorrect';
   state.history.push(result);
 
@@ -199,6 +287,7 @@ export const updateSelectedNumber = (number, selected) => {
 
   // Regenerate possible problems whenever selected numbers change, using current operator
   state.possibleProblems = generatePossibleProblems(state.selectedNumbers, state.selectedOperator);
+  saveState();
 
   return [...state.selectedNumbers];
 };
@@ -219,6 +308,7 @@ export const updateSelectedOperator = (operator) => {
   state.selectedOperator = operator;
   // Regenerate possible problems when operator changes
   state.possibleProblems = generatePossibleProblems(state.selectedNumbers, state.selectedOperator);
+  saveState();
   // The problem description mentions:
   // createNewProblem(); // This might be called by UI logic after settings are confirmed
   // For now, I will leave it commented out as per the note.
@@ -231,4 +321,13 @@ export const updateSelectedOperator = (operator) => {
  */
 export const getSelectedOperator = () => {
   return state.selectedOperator;
+};
+
+/**
+ * Resets all SRS progress
+ */
+export const resetProgress = () => {
+  state.problemStats = {};
+  state.history = [];
+  saveState();
 };

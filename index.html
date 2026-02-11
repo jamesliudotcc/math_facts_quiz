@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Math Facts Quiz</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <nav>
@@ -47,7 +48,14 @@
                     <label for="op-divide">Division (÷)</label>
                 </div>
             </fieldset>
+            
+            <div id="mastery-container">
+                <h3>Mastery Progress</h3>
+                <div id="mastery-grid" class="mastery-grid"></div>
+            </div>
+
             <div class="dialog-buttons">
+                <button type="button" id="reset-progress" class="danger-button">Reset Progress</button>
                 <button type="submit" id="settings-ok">OK</button>
             </div>
         </form>
@@ -64,5 +72,16 @@
     </main>
     <aside popover id="correct_or_incorrect">👍</aside>
     <script type="module" src="index.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    console.log('SW registered:', reg);
+                }).catch(err => {
+                    console.log('SW registration failed:', err);
+                });
+            });
+        }
+    </script>
 </body>
 </html>

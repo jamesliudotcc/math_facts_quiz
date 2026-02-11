@@ -20,7 +20,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'live-server --port=8080 --no-browser --entry-file=index.html --middleware=./live-server-middleware.js',
+    command: 'python3 -m http.server 8080',
     url: 'http://localhost:8080',
     reuseExistingServer: !process.env.CI,
   },

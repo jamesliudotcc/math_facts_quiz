@@ -1,6 +1,13 @@
 // Path: tests/math-utils.test.js
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { JSDOM } from 'jsdom';
+
+const dom = new JSDOM('', { url: 'http://localhost' });
+global.window = dom.window;
+global.document = dom.window.document;
+global.localStorage = dom.window.localStorage;
+
 import { TIMES, DIVIDE } from '../constants.js';
 import { generateProblem, resultIsCorrect } from '../math-utils.js';
 
