@@ -85,8 +85,9 @@ export const resultIsCorrect = (result) => {
         return result.answer === result.factor1 * result.factor2;
     } else if (result.operator === DIVIDE) {
         // Ensure factor2 is not zero before division, though problem generation should prevent this.
-        if (result.factor2 === 0) {
-            return false; // Division by zero is incorrect / impossible
+        // Also ensure it is an integer division, as we only expect integer answers for math facts.
+        if (result.factor2 === 0 || result.factor1 % result.factor2 !== 0) {
+            return false;
         }
         return result.answer === result.factor1 / result.factor2;
     }
